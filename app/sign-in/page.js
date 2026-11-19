@@ -37,7 +37,7 @@ export default function SignIn() {
     const verified = (f?.totp || []).find((x) => x.status === 'verified');
     if (verified) { setFactorId(verified.id); setStep('code'); return; }
     for (const x of f?.totp || []) await supabase.auth.mfa.unenroll({ factorId: x.id });   // clear any half-finished set-up
-    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Clinic owner' });
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Clinic owner', issuer: 'CCF trippleh' });
     if (error) { setMsg('We could not start two-factor set-up. Please try again.'); return; }
     setQr(data.totp.qr_code); setFactorId(data.id); setStep('enrol');
   }
