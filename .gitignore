@@ -1,0 +1,13 @@
+# dependencies and build output
+node_modules/
+.next/
+out/
+# secrets and local settings: never commit these
+.env
+.env.*
+!.env.example
+*.pem
+# editor and OS files
+.DS_Store
+Thumbs.db
+.vscode/
