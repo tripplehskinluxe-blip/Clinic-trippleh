@@ -28,7 +28,7 @@ export default function Preview({ params }) {
       if (v.error) { setMsg(v.error); return; }
       const c = await fetch(`/api/clients/${v.client_id}`, { headers: h, cache: 'no-store' }).then((r) => r.json());
       if (c.error) { setMsg(c.error); return; }
-      setModel(buildPreview({ client: c.client.details, form: v.form, consent: v.consent, assessment: null }));
+      setModel(buildPreview({ client: c.client.details, form: v.form, consent: v.consent, assessment: v.assessment }));
     })();
   }, [id, router]);
 
@@ -110,7 +110,26 @@ export default function Preview({ params }) {
 
       <section style={sec}>
         <h2 style={h2}>Therapist assessment</h2>
-        <p style={{ margin: 0, fontStyle: 'italic' }}>{model.assessment ? '' : 'Not yet recorded.'}</p>
+        {!model.assessment ? <p style={{ margin: 0, fontStyle: 'italic' }}>Not yet recorded.</p> : (
+          <>
+            <div style={row}><span>Therapist notes</span><span>{val(model.assessment.notes)}</span></div>
+            <p style={{ margin: '8px 0 4px' }}>Skin analysis</p>
+            {model.assessment.skin.map((r) => (
+              <div key={r.label} style={row}><span>{r.label}</span><span>{r.choices.map((o) => `${tick(o.ticked)} ${o.label}`).join('    ')}</span></div>
+            ))}
+            <div style={row}><span>Overall skin type</span><span>{val(model.assessment.overall_skin_type)}</span></div>
+            <p style={{ margin: '8px 0 4px' }}>Face diagram</p>
+            <svg viewBox="0 0 200 260" style={{ width: 220, display: 'block', margin: '0 auto' }} role="img" aria-label="Marked areas of the face">
+              <path d="M100 14 C150 14 170 54 170 110 C170 170 140 232 100 240 C60 232 30 170 30 110 C30 54 50 14 100 14 Z" fill="none" stroke="#5b2a8c" strokeWidth="2" />
+              {model.assessment.diagram.map((m, i) => <circle key={i} cx={m.x * 2} cy={m.y * 2.6} r="7" fill="#e0a040" stroke="#7a1f1f" strokeWidth="2" />)}
+            </svg>
+            <p style={{ textAlign: 'center', fontSize: 13 }}>{model.assessment.diagram.length} area(s) marked</p>
+            <div style={row}><span>Skin lesions</span><span>{val(model.assessment.lesions)}</span></div>
+            <div style={row}><span>Skin concerns</span><span>{val(model.assessment.concerns)}</span></div>
+            <div style={row}><span>Treatment details</span><span>{val(model.assessment.treatment_details)}</span></div>
+            <div style={row}><span>Client feedback</span><span>{val(model.assessment.client_feedback)}</span></div>
+          </>
+        )}
       </section>
     </main>
   );

@@ -61,6 +61,7 @@ export default function Record({ params }) {
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <a href={`/clinic/visits/${v.id}`} style={btn}>Open form</a>
+              <a href={`/clinic/visits/${v.id}/assessment`} style={btn}>Assessment</a>
               <a href={`/clinic/visits/${v.id}/preview`} style={btn}>Preview</a>
             </div>
           </div>

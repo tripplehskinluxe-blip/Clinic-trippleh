@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { encryptJson, decryptJson } from '@/lib/crypto.js';
 import { cleanForm, validateForm, contraindications } from '@/lib/visit-form.js';
+import { cleanAssessment } from '@/lib/assessment.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,7 +31,9 @@ export async function GET(req, { params }) {
     const signed = await sb.storage.from('clinic-signatures').createSignedUrl(cons.data.signature_path, 600);
     consent = { version: cons.data.wording_version, captured_at: cons.data.captured_at, signature_url: signed.data?.signedUrl || null };
   }
-  return NextResponse.json({ status: data.status, client_id: data.client_id, created_at: data.created_at, form, contraindications: contraindications(form), assessment_enc: data.assessment_enc, consent }, { headers: { 'Cache-Control': 'no-store' } });
+  let assessment = null;
+  if (data.assessment_enc) { try { assessment = cleanAssessment(decryptJson(data.assessment_enc)); } catch { assessment = null; } }
+  return NextResponse.json({ status: data.status, client_id: data.client_id, created_at: data.created_at, form, contraindications: contraindications(form), assessment, consent }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function PUT(req, { params }) {
