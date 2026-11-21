@@ -43,5 +43,6 @@ export async function POST(req) {
     if (/signature/.test(msg)) return NextResponse.json({ error: 'The signature was not received. Please sign again.', retake_consent: true }, { status: 400 });
     return NextResponse.json({ error: 'Could not save the client. Please try again.' }, { status: 500 });
   }
-  return NextResponse.json({ id: data }, { status: 201 });
+  const { data: vis } = await sb.from('clinic_visits').select('id').eq('client_id', data).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  return NextResponse.json({ id: data, visit_id: vis?.id || null }, { status: 201 });
 }

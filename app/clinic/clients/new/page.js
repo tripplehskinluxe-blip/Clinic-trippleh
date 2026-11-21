@@ -101,7 +101,7 @@ export default function AddClient() {
     setBusy(false);
     if (res.status === 409 || d.retake_consent) { setConsent(null); setStage('consent'); setMsg(d.error || 'Please take consent again.'); return; }
     if (!res.ok) { setErrs(d.fields || {}); setMsg(d.error || 'Could not save. Please try again.'); return; }
-    router.replace('/clinic?saved=1');
+    router.replace(d.visit_id ? `/clinic/visits/${d.visit_id}` : '/clinic?saved=1');
   }
 
   if (!ready) return <p style={{ padding: 24 }}>Checking access…</p>;
