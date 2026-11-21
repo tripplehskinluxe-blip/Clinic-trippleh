@@ -32,6 +32,7 @@ export default function ClinicHome() {
         <button onClick={signOut} style={{ padding: '10px 18px', borderRadius: 999, border: '1.5px solid #5b2a8c', background: '#fff', color: '#5b2a8c' }}>Sign out</button>
       </header>
       <p>Signed in as: <b>{role}</b>. Client records will appear here.</p>
+      <a href="/clinic/clients/new" style={{ display: 'inline-block', marginTop: 16, padding: '14px 22px', borderRadius: 999, background: '#5b2a8c', color: '#fff', textDecoration: 'none' }}>Add a client</a>
     </main>
   );
 }
