@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { encryptJson, decryptJson } from '@/lib/crypto.js';
 import { cleanAssessment } from '@/lib/assessment.js';
+import { logAccess } from '@/lib/access-log.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,6 +21,7 @@ export async function GET(req, { params }) {
   const { id } = await params;
   const { data, error } = await sb.from('clinic_visits').select('assessment_enc').eq('id', id).maybeSingle();
   if (error || !data) return NextResponse.json({ error: 'Visit not found.' }, { status: 404 });
+  if (!(await logAccess(sb, 'viewed', 'visit', id))) return NextResponse.json({ error: 'The access log is not available, so this assessment cannot be shown. Please try again.' }, { status: 503 });
   let assessment;
   try { assessment = data.assessment_enc ? cleanAssessment(decryptJson(data.assessment_enc)) : cleanAssessment({}); }
   catch { return NextResponse.json({ error: 'This assessment could not be read. Please contact support.' }, { status: 500 }); }

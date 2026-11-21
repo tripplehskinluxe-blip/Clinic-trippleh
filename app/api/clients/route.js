@@ -56,12 +56,15 @@ export async function GET(req) {
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false },
   });
-  const cl = await sb.from('clinic_clients').select('id,details_enc,created_at').is('deleted_at', null).order('created_at', { ascending: false }).limit(300);
+  const removed = new URL(req.url).searchParams.get('removed') === '1';
+  if (removed) { const rr = await sb.rpc('clinic_role'); if (rr.data !== 'owner') return NextResponse.json({ error: 'Only the owner can see removed clients.' }, { status: 403 }); }
+  const base = sb.from('clinic_clients').select('id,details_enc,created_at,deleted_at').order('created_at', { ascending: false }).limit(300);
+  const cl = await (removed ? base.not('deleted_at', 'is', null) : base.is('deleted_at', null));
   if (cl.error) return NextResponse.json({ error: 'Could not load clients.' }, { status: 500 });
   const ids = (cl.data || []).map((c) => c.id);
   const vi = ids.length
     ? await sb.from('clinic_visits').select('id,client_id,status,created_at').in('client_id', ids).order('created_at', { ascending: false })
     : { data: [] };
-  const clients = summarise(cl.data || [], vi.data || [], decryptJson);
+  const clients = summarise(cl.data || [], vi.data || [], decryptJson).map((c, i) => ({ ...c, deleted_at: cl.data?.[i]?.deleted_at || null }));
   return NextResponse.json({ clients }, { headers: { 'Cache-Control': 'no-store' } });
 }

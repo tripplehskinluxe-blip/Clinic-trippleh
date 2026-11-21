@@ -32,13 +32,45 @@ export default function Preview({ params }) {
     })();
   }, [id, router]);
 
+  async function pdfFile() {
+    const { data: s } = await supabase.auth.getSession();
+    const res = await fetch(`/api/visits/${id}/pdf`, { headers: { Authorization: `Bearer ${s?.session?.access_token || ''}` }, cache: 'no-store' });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not create the PDF.'); }
+    return res.blob();
+  }
+  async function downloadPdf() {
+    try {
+      const blob = await pdfFile();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `consultation-${id.slice(0, 8)}.pdf`; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) { setMsg(e.message); }
+  }
+  async function sharePdf() {
+    try {
+      const blob = await pdfFile();
+      const file = new File([blob], `consultation-${id.slice(0, 8)}.pdf`, { type: 'application/pdf' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Consultation form' });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = file.name; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      const { data: s } = await supabase.auth.getSession();
+      await fetch('/api/access-log', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s?.session?.access_token || ''}` }, body: JSON.stringify({ action: 'shared', entity: 'visit', id }) });
+    } catch (e) { if (e?.name !== 'AbortError') setMsg(e.message); }
+  }
+
   if (msg) return <p style={{ padding: 24, color: '#7a1f1f' }}>{msg}</p>;
   if (!model) return <p style={{ padding: 24 }}>Preparing the form…</p>;
   return (
     <main style={{ maxWidth: 800, margin: '0 auto', padding: 24, background: '#fff', fontFamily: 'Georgia, serif', color: '#111', fontSize: 15 }}>
       <style>{`@media print { .noprint { display: none !important } body { background: #fff } }`}</style>
-      <div className="noprint" style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-        <button onClick={() => window.print()} style={{ padding: '10px 18px', borderRadius: 999, border: 0, background: '#5b2a8c', color: '#fff' }}>Print or save as PDF</button>
+      <div className="noprint" style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+        <button onClick={() => window.print()} style={{ padding: '10px 18px', borderRadius: 999, border: 0, background: '#5b2a8c', color: '#fff' }}>Print</button>
+        <button onClick={downloadPdf} style={{ padding: '10px 18px', borderRadius: 999, border: 0, background: '#5b2a8c', color: '#fff' }}>Download PDF</button>
+        <button onClick={sharePdf} style={{ padding: '10px 18px', borderRadius: 999, border: '1.5px solid #5b2a8c', background: '#fff', color: '#5b2a8c' }}>Share</button>
         <button onClick={() => history.back()} style={{ padding: '10px 18px', background: 'none', border: 0, color: '#5b2a8c' }}>Back</button>
       </div>
 

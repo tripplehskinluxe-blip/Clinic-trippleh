@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { encryptJson, decryptJson } from '@/lib/crypto.js';
 import { cleanForm, validateForm, contraindications } from '@/lib/visit-form.js';
 import { cleanAssessment } from '@/lib/assessment.js';
+import { logAccess } from '@/lib/access-log.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,7 @@ export async function GET(req, { params }) {
   const { id } = await params;
   const { data, error } = await sb.from('clinic_visits').select('id,client_id,status,form_enc,assessment_enc,created_at').eq('id', id).maybeSingle();
   if (error || !data) return NextResponse.json({ error: 'Visit not found.' }, { status: 404 });
+  if (!(await logAccess(sb, 'viewed', 'visit', id))) return NextResponse.json({ error: 'The access log is not available, so this form cannot be shown. Please try again.' }, { status: 503 });
   let form;
   try { form = data.form_enc ? cleanForm(decryptJson(data.form_enc)) : cleanForm({}); }
   catch { return NextResponse.json({ error: 'This form could not be read. Please contact support.' }, { status: 500 }); }
