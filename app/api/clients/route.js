@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { encryptJson, lookupHash } from '@/lib/crypto.js';
+import { encryptJson, decryptJson, lookupHash } from '@/lib/crypto.js';
 import { validateClient } from '@/lib/client-form.js';
 import { validateConsent } from '@/lib/consent.js';
+import { summarise } from '@/lib/client-list.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -45,4 +46,22 @@ export async function POST(req) {
   }
   const { data: vis } = await sb.from('clinic_visits').select('id').eq('client_id', data).order('created_at', { ascending: false }).limit(1).maybeSingle();
   return NextResponse.json({ id: data, visit_id: vis?.id || null }, { status: 201 });
+}
+
+// The list of clients this person may see (RLS decides: the owner sees all, a therapist sees her assigned clients). Names are decrypted here, on the server.
+export async function GET(req) {
+  const header = req.headers.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  if (!token) return NextResponse.json({ error: 'Please sign in again.' }, { status: 401 });
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const cl = await sb.from('clinic_clients').select('id,details_enc,created_at').is('deleted_at', null).order('created_at', { ascending: false }).limit(300);
+  if (cl.error) return NextResponse.json({ error: 'Could not load clients.' }, { status: 500 });
+  const ids = (cl.data || []).map((c) => c.id);
+  const vi = ids.length
+    ? await sb.from('clinic_visits').select('id,client_id,status,created_at').in('client_id', ids).order('created_at', { ascending: false })
+    : { data: [] };
+  const clients = summarise(cl.data || [], vi.data || [], decryptJson);
+  return NextResponse.json({ clients }, { headers: { 'Cache-Control': 'no-store' } });
 }
