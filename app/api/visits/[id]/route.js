@@ -19,12 +19,18 @@ function db(req) {
 export async function GET(req, { params }) {
   const sb = db(req); if (!sb) return NextResponse.json({ error: 'Please sign in again.' }, { status: 401 });
   const { id } = await params;
-  const { data, error } = await sb.from('clinic_visits').select('id,status,form_enc,assessment_enc').eq('id', id).maybeSingle();
+  const { data, error } = await sb.from('clinic_visits').select('id,client_id,status,form_enc,assessment_enc,created_at').eq('id', id).maybeSingle();
   if (error || !data) return NextResponse.json({ error: 'Visit not found.' }, { status: 404 });
-  let form = null;
+  let form;
   try { form = data.form_enc ? cleanForm(decryptJson(data.form_enc)) : cleanForm({}); }
-  catch { return NextResponse.json({ error: 'This record could not be read. Please contact support.' }, { status: 500 }); }
-  return NextResponse.json({ status: data.status, form, contraindications: contraindications(form), assessment_enc: data.assessment_enc }, { headers: { 'Cache-Control': 'no-store' } });
+  catch { return NextResponse.json({ error: 'This form could not be read. Please contact support.' }, { status: 500 }); }
+  const cons = await sb.from('clinic_consents').select('wording_version,captured_at,signature_path').eq('visit_id', id).maybeSingle();
+  let consent = null;
+  if (cons.data) {
+    const signed = await sb.storage.from('clinic-signatures').createSignedUrl(cons.data.signature_path, 600);
+    consent = { version: cons.data.wording_version, captured_at: cons.data.captured_at, signature_url: signed.data?.signedUrl || null };
+  }
+  return NextResponse.json({ status: data.status, client_id: data.client_id, created_at: data.created_at, form, contraindications: contraindications(form), assessment_enc: data.assessment_enc, consent }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function PUT(req, { params }) {
@@ -40,7 +46,6 @@ export async function PUT(req, { params }) {
   let form_enc;
   try { form_enc = encryptJson(form); }
   catch { return NextResponse.json({ error: 'The spa system is not fully set up yet. Please contact support.' }, { status: 503 }); }
-  // the assessment is kept exactly as it is; it is written in its own step
   const current = await sb.from('clinic_visits').select('assessment_enc').eq('id', id).maybeSingle();
   if (current.error || !current.data) return NextResponse.json({ error: 'Visit not found.' }, { status: 404 });
   const { error } = await sb.rpc('clinic_save_visit', { p_visit: id, p_form_enc: form_enc, p_assessment_enc: current.data.assessment_enc, p_status: status });

@@ -61,10 +61,9 @@ export default function SpaHome() {
             <div style={{ fontSize: 18, fontWeight: 500 }}>{c.name}</div>
             <div style={{ color: '#6f6581', fontSize: 14 }}>Registered {new Date(c.registered).toLocaleDateString('en-GB')} · {STATUS[c.form_status] || c.form_status}</div>
           </div>
-          {c.visit_id && <a href={`/clinic/visits/${c.visit_id}`} style={{ padding: '10px 18px', borderRadius: 999, border: '1.5px solid #5b2a8c', color: '#5b2a8c', textDecoration: 'none' }}>Open form</a>}
+          <a href={`/clinic/clients/${c.id}`} style={{ padding: '10px 18px', borderRadius: 999, border: '1.5px solid #5b2a8c', color: '#5b2a8c', textDecoration: 'none' }}>Open record</a>
         </div>
       ))}
-      <div style={{ marginTop: 28 }}><button onClick={signOut} style={{ display: 'none' }}>hidden</button></div>
-    </main>
+          </main>
   );
 }
