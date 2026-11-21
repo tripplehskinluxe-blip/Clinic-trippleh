@@ -24,7 +24,7 @@ export default function SignIn() {
     if (!role) {
       await supabase.auth.signOut();
       setStep('password');
-      setMsg('This account does not have clinic access. Please contact the clinic owner.');
+      setMsg('This account does not have access to the spa system. Please contact the spa owner.');
       return;
     }
     router.replace('/clinic');
@@ -60,7 +60,9 @@ export default function SignIn() {
 
   return (
     <main style={{ maxWidth: 480, margin: '0 auto', padding: '48px 24px' }}>
-      <h1 style={{ fontWeight: 500, marginBottom: 8 }}>Clinic sign in</h1>
+      <img src="/logo.png" alt="Heeshas Healing Hands Spa" width="88" height="88" style={{ display: 'block', margin: '0 auto 12px', borderRadius: '50%' }} />
+      <h1 style={{ fontWeight: 500, marginBottom: 8, textAlign: 'center' }}>Heeshas Healing Hands Spa</h1>
+      <p style={{ textAlign: 'center', color: '#6f6581', marginTop: 0 }}>Sign in</p>
       {msg && <p role="alert" style={{ background: '#fbe3e3', color: '#7a1f1f', padding: 14, borderRadius: 12 }}>{msg}</p>}
 
       {step === 'password' && (

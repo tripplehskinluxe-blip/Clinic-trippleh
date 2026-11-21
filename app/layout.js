@@ -1,4 +1,8 @@
-export const metadata = { title: 'Clinic', robots: { index: false, follow: false } };
+export const metadata = {
+  title: 'Heeshas Healing Hands Spa',
+  icons: { icon: '/logo.png', apple: '/logo.png' },
+  robots: { index: false, follow: false },
+};
 
 export default function RootLayout({ children }) {
   return (

@@ -24,8 +24,8 @@ export async function POST(req) {
     details_enc = encryptJson(v.value);
     lookup = lookupHash(v.value.full_name, v.value.phone);
   } catch {
-    console.error('clinic: encryption keys are not configured');
-    return NextResponse.json({ error: 'The clinic system is not fully set up yet. Please contact support.' }, { status: 503 });
+    console.error('spa: encryption keys are not configured');
+    return NextResponse.json({ error: 'The spa system is not fully set up yet. Please contact support.' }, { status: 503 });
   }
 
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {

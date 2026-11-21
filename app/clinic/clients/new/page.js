@@ -69,7 +69,7 @@ function ConsentStep({ onAccepted, onDeclined }) {
       </div>
       {wording && <p style={{ fontSize: 13, color: '#6f6581' }}>Version {wording.version}</p>}
       <label style={{ display: 'flex', gap: 10, marginTop: 14, alignItems: 'flex-start' }}><input type="checkbox" checked={treat} onChange={(e) => setTreat(e.target.checked)} style={{ marginTop: 6 }} /><span>I agree to receive treatment today.</span></label>
-      <label style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'flex-start' }}><input type="checkbox" checked={store} onChange={(e) => setStore(e.target.checked)} style={{ marginTop: 6 }} /><span>I agree that the clinic keeps my record as described above.</span></label>
+      <label style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'flex-start' }}><input type="checkbox" checked={store} onChange={(e) => setStore(e.target.checked)} style={{ marginTop: 6 }} /><span>I agree that the spa keeps my record as described above.</span></label>
       <p style={label}>Client signature</p>
       <SignaturePad padRef={padRef} onInk={setInk} />
       {msg && <p role="alert" style={{ background: '#fbe3e3', color: '#7a1f1f', padding: 14, borderRadius: 12 }}>{msg}</p>}
