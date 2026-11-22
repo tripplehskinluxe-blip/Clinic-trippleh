@@ -82,7 +82,10 @@ export default function Record({ params }) {
       )}
 
       <section style={card}>
-        <h2 style={{ fontWeight: 500, marginTop: 0 }}>Contact and personal details</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <h2 style={{ fontWeight: 500, marginTop: 0 }}>Contact and personal details</h2>
+          {!removed && <a href={`/clinic/clients/${id}/edit`} style={btn}>Edit details</a>}
+        </div>
         {CONTACT.map(([k, label]) => (
           <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: '1px solid #f0e8f7' }}>
             <span style={{ color: '#6f6581' }}>{label}</span><span style={{ textAlign: 'right' }}>{det[k] ? String(det[k]) : '—'}</span>

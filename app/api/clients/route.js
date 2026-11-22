@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { encryptJson, decryptJson, lookupHash } from '@/lib/crypto.js';
 import { validateClient } from '@/lib/client-form.js';
 import { validateConsent } from '@/lib/consent.js';
+import { duplicateDecision } from '@/lib/duplicates.js';
 import { summarise } from '@/lib/client-list.js';
 
 export const runtime = 'nodejs';
@@ -33,6 +34,11 @@ export async function POST(req) {
     global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
+  const dup = await sb.rpc('clinic_find_duplicate', { p_lookup_hash: lookup });
+  if (dup.error) return NextResponse.json({ error: 'Could not check for duplicates. Please try again.' }, { status: 500 });
+  if (duplicateDecision(dup.data === true, body.confirm_duplicate === true) === 'ask') {
+    return NextResponse.json({ error: 'A client with this name and phone number already exists. If this is a different person, tap "Add anyway".', duplicate: true }, { status: 409 });
+  }
   const { data, error } = await sb.rpc('clinic_create_client_with_consent', {
     p_details_enc: details_enc, p_lookup_hash: lookup,
     p_wording: body.consent.version, p_treatment: true, p_storage: true, p_signature: body.consent.signature_path,

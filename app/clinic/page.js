@@ -61,6 +61,8 @@ export default function SpaHome() {
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <a href="/clinic/clients/new" style={{ padding: '14px 22px', borderRadius: 999, background: '#5b2a8c', color: '#fff', textDecoration: 'none' }}>Add a client</a>
         {owner && <a href="/clinic/settings/consent" style={link}>Consent wording</a>}
+        {owner && <a href="/clinic/settings/team" style={link}>Team</a>}
+        {owner && <a href="/clinic/settings/audit" style={link}>Audit log</a>}
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 32, alignItems: 'center', flexWrap: 'wrap' }}>
